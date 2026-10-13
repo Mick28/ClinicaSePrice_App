@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Interfaz de escritorio (Windows Forms, RT-01): login, inicio por
+       perfil y las pantallas P-01 a P-27 de la especificación. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>SePrice.UI</RootNamespace>
+    <AssemblyName>SePrice</AssemblyName>
+    <StartupObject>SePrice.UI.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SePrice.Negocio\SePrice.Negocio.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Se copian junto al programa: el logo y la configuración. -->
+    <None Remove="Recursos\logo.png" />
+    <None Include="Recursos\logo.png" Link="logo.png"
+      CopyToOutputDirectory="PreserveNewest" />
+    <None Update="SePrice.config.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

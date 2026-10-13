@@ -1,0 +1,80 @@
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+artifacts/
+publish/
+
+# Visual Studio Code workspace
+.vscode/
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+# The packages folder can be ignored because of PackageReference restore
+packages/
+
+# MSBuild
+*.log
+*.tlog
+*.lastbuildstate
+*.vsix
+
+# Test results
+TestResults/
+*.trx
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# User secrets (dotnet user-secrets)
+secrets.json
+
+# EF Core Migrations metadata
+*.efmigrations.log
+
+# Files built by Visual Studio
+*.dll
+*.exe
+*.db
+*.pdb
+
+# Rider caches
+/.idea/
+/*.sln.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# OneDrive temporary files and indexes
+~$*
+~*.tmp
+
+# Node/npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+*.log
+
+# Local configuration files (uncomment if you keep sensitive or environment-specific files)
+# appsettings.*.Local.json
+# appsettings.*.Development.json
+
+# Dotnet publish output
+**/bin/**/publish/
+
+# Rider and ReSharper
+_ReSharper*/
+*.DotSettings.user

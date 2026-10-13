@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Capa de negocio: reglas, permisos por perfil (matriz 5.3),
+       sesión, auditoría y los servicios de los 18 casos de uso. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>SePrice.Negocio</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SePrice.Datos\SePrice.Datos.csproj" />
+  </ItemGroup>
+</Project>

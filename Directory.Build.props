@@ -1,0 +1,13 @@
+<Project>
+  <!-- Opciones comunes a los cuatro proyectos de la solución. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Company>Clínica SePrice · Grupo 5 · PP2 Comisión D</Company>
+    <Product>Sistema de Gestión Administrativa Clínica SePrice</Product>
+    <Version>2.1.0</Version>
+    <NeutralLanguage>es-AR</NeutralLanguage>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

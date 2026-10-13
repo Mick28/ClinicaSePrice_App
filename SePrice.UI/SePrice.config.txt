@@ -1,0 +1,10 @@
+# Configuración de Clínica SePrice (clave=valor)
+# Base: archivo de la base de datos SQLite (se crea la primera vez).
+Base=SePrice.db
+# ModoDemo=si carga los datos de ejemplo y muestra los accesos de prueba
+# en el inicio de sesión. En producción: ModoDemo=no.
+ModoDemo=si
+# Reloj de la demostración: fecha y hora con las que arranca el sistema
+# (jueves 15/10/2026, como en la especificación). Borrar para usar la real.
+FechaDemo=2026-10-15
+HoraDemo=08:50

@@ -1,0 +1,91 @@
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+using SePrice.Negocio;
+
+namespace SePrice.UI
+{
+  /// <summary>
+  /// P-20 Asignar consultorio e insumos al profesional (CU-G-12): sin
+  /// superposición en el mismo consultorio; dotación por consultorio.
+  /// </summary>
+  partial class PAsignacion : Pantalla
+  {
+    readonly ComboBox cboProfesional = Ui.Combo("Profesional",
+      DatosBase.ListaProfesionales("médico"));
+    readonly ComboBox cboConsultorio = Ui.Combo("Consultorio",
+      DatosBase.ListaLugares("consultorio"));
+    readonly ComboBox cboDia = Ui.Combo("Dia", Asignaciones.Dias);
+    readonly TextBox txtDesde = Ui.Caja("Desde"), txtHasta = Ui.Caja("Hasta");
+    readonly DateTimePicker dtpVigencia = Ui.Fecha("Vigencia", Reloj.Hoy);
+    readonly Columna derecha = new Columna();
+
+    protected override void ConstruirNormal()
+    {
+      cboConsultorio.SelectedIndexChanged += (s, e) => Ocupacion();
+      cboDotConsultorio.SelectedIndexChanged += (s, e) => Dot();
+      Pestanas p = new Pestanas { AlElegir = Elegir };
+      p.Agregar("Asignaciones");
+      p.Agregar("Dotación de insumos");
+      Contenido.Controls.Add(p);
+      p.Iniciar();
+    }
+
+    void Elegir(string nombre, Columna area)
+    {
+      OlvidarCampos();
+      if (nombre == "Asignaciones") area.Controls.Add(Ui.EnFila(
+        Formulario(), derecha));
+      else area.Controls.Add(Dotacion());
+    }
+
+    Control Formulario()
+    {
+      Tarjeta t = new Tarjeta { MaximumSize = Ui.Tope(380) };
+      t.Controls.Add(Ui.Subtitulo("Nueva asignación"));
+      t.Controls.Add(NuevoCampo("profesional", "Profesional",
+        cboProfesional, true));
+      t.Controls.Add(NuevoCampo("consultorio", "Consultorio",
+        cboConsultorio, true));
+      t.Controls.Add(NuevoCampo("dia", "Día", cboDia, true));
+      t.Controls.Add(Ui.EnFila(NuevoCampo("franja", "Hora desde (hh:mm)",
+        txtDesde, true), NuevoCampo("hasta", "Hora hasta", txtHasta, true)));
+      t.Controls.Add(NuevoCampo("vigencia", "Vigencia desde", dtpVigencia));
+      t.Controls.Add(Ui.Botones(Ui.Boton("Asignar", TipoBoton.Primario,
+        (s, e) => Asignar()), BotonBlanquear()));
+      return t;
+    }
+
+    void Asignar()
+    {
+      DatosAsignacion d = new DatosAsignacion {
+        IdProfesional = (cboProfesional.SelectedItem as Opcion)?.Id ?? 0,
+        IdConsultorio = (cboConsultorio.SelectedItem as Opcion)?.Id ?? 0,
+        DiaSemana = cboDia.Text, HoraDesde = txtDesde.Text.Trim(),
+        HoraHasta = txtHasta.Text.Trim(),
+        VigenciaDesde = Formato.Iso(dtpVigencia.Value) };
+      if (!Horas(d)) return;
+      if (Guardar(() => Asignaciones.Asignar(d), "Asignación registrada. " +
+        Afectados(d))) Ocupacion();
+    }
+
+    bool Horas(DatosAsignacion d)
+    {
+      TimeSpan h;
+      bool ok = TimeSpan.TryParse(d.HoraDesde, out h) &&
+        TimeSpan.TryParse(d.HoraHasta, out h) && d.HoraDesde.Length == 5 &&
+        d.HoraHasta.Length == 5;
+      if (!ok) Dialogo.Error("Ingresá las horas como 09:00.");
+      return ok;
+    }
+
+    // Reasignación (CU-A-16): turnos futuros en otro consultorio.
+    static string Afectados(DatosAsignacion d)
+    {
+      int n = Asignaciones.TurnosAfectados(d.IdProfesional,
+        d.IdConsultorio);
+      return n == 0 ? "" : "Atención: el profesional tiene " + n + " turnos" +
+        " futuros en otro consultorio; avisá a los pacientes el nuevo lugar.";
+    }
+  }
+}

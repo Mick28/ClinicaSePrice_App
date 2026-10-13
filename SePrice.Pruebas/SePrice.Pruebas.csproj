@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Pruebas de aceptación: recorre las 8 escenas de la demostración y
+       verifica la matriz de permisos 5.3. Ejecutar: dotnet run. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>SePrice.Pruebas</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SePrice.Datos\SePrice.Datos.csproj" />
+    <ProjectReference Include="..\SePrice.Negocio\SePrice.Negocio.csproj" />
+  </ItemGroup>
+</Project>
