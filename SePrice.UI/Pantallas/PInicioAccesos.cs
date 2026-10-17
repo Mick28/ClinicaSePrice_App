@@ -88,20 +88,20 @@ namespace SePrice.UI
     // Tarjeta de acceso: título en negrita y descripción en gris.
     Control Acceso(ItemMenu i)
     {
-        string cu = Navegacion.Pantallas[i.Codigo].Cu;
-        string codigo = Configuracion.MostrarCodigos ? cu + " · " : "";
-        Tarjeta t = new Tarjeta
-        {
-            Espacio = 2,
-            Cursor = Cursors.Hand,
-            BackColor = Tema.FilaAlterna,
-            Padding = new Padding(16, 12, 16, 12)
-        };
-        t.Controls.Add(Linea(Titulo(i), 10.5f, FontStyle.Bold, Tema.Texto));
-        t.Controls.Add(Linea(codigo + descripciones[i.Codigo], 9.5f,
-            FontStyle.Regular, Tema.Texto2));
-        Clic(t, i.Codigo);
-        return t;
+      string cu = Navegacion.Pantallas[i.Codigo].Cu;
+      string codigo = Configuracion.MostrarCodigos ? cu + " · " : "";
+      Tarjeta t = new Tarjeta
+      {
+        Espacio = 2,
+        Cursor = Cursors.Hand,
+        BackColor = Tema.FilaAlterna,
+        Padding = new Padding(16, 12, 16, 12)
+      };
+      t.Controls.Add(Linea(Titulo(i), 10.5f, FontStyle.Bold, Tema.Texto));
+      t.Controls.Add(Linea(codigo + descripciones[i.Codigo], 9.5f,
+          FontStyle.Regular, Tema.Texto2));
+      Clic(t, i.Codigo);
+      return t;
     }
 
     static Parrafo Linea(string texto, float puntos, FontStyle estilo,
