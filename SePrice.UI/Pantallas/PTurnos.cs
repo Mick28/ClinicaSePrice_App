@@ -68,7 +68,7 @@ namespace SePrice.UI
         cboProfesional, false), new Campo("Desde", dtpDesde, false),
         modalidad) : Ui.EnFila(new Campo("Estudio *", cboEstudio, true),
         new Campo("Desde", dtpDesde, false), modalidad));
-      t.Controls.Add(Ui.Botones(Ui.Boton("Buscar franjas libres",
+      t.Controls.Add(Ui.Botones(Ui.Boton("Consultar disponibilidad",
         TipoBoton.Secundario, (s, e) => Buscar())));
       return t;
     }

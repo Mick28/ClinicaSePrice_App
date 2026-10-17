@@ -53,7 +53,7 @@ namespace SePrice.UI
     // CU-A-05, alternativo: primera fecha libre o sobreturno.
     void SinDisponibilidad()
     {
-      string mensaje = "No hay franjas libres en esa semana.";
+      string mensaje = "No hay turnos disponibles en esa semana.";
       Opcion esp = cboEspecialidad.SelectedItem as Opcion;
       if (circuito == "A" && esp != null)
       {
