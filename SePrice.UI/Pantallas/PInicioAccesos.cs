@@ -61,10 +61,11 @@ namespace SePrice.UI
     Button Acceso(ItemMenu i)
     {
       string cu = Navegacion.Pantallas[i.Codigo].Cu;
+      string codigo = Configuracion.MostrarCodigos ? cu + " · " : "";
       Button b = new Button { Height = 58, FlatStyle = FlatStyle.Flat,
         BackColor = Tema.Fondo, ForeColor = Tema.Texto, Cursor =
         Cursors.Hand, TextAlign = ContentAlignment.MiddleLeft,
-        Font = Tema.Fuente(9.5f), Text = i.Texto + "\n" + cu + " · " +
+        Font = Tema.Fuente(9.5f), Text = i.Texto + "\n" + codigo + 
         descripciones[i.Codigo] };
       b.FlatAppearance.BorderColor = Tema.Borde;
       b.Click += (s, e) => Ir(i.Codigo);

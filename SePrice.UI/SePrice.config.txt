@@ -8,3 +8,7 @@ ModoDemo=si
 # (jueves 15/10/2026, como en la especificación). Borrar para usar la real.
 FechaDemo=2026-10-15
 HoraDemo=08:50
+
+# MostrarCodigos=si muestra los códigos de caso de uso (CU-G-xx) y de
+# circuito en las pantallas, para revisar la trazabilidad. Normal: no.
+MostrarCodigos=no
