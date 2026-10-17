@@ -39,6 +39,31 @@ namespace SePrice.Negocio
         "ORDER BY a.id_asignacion", idConsultorio, Formato.Iso(Reloj.Hoy));
     }
 
+    /// <summary>
+    /// Asignaciones vigentes de todos los consultorios (sin las anuladas),
+    /// con filtro opcional por profesional y por consultorio.
+    /// </summary>
+    public static DataTable Vigentes(int? idProfesional, int? idConsultorio)
+    {
+      Sesion.ExigirLectura(Cu);
+      return Consulta.Tabla("SELECT a.id_asignacion AS Id, c.numero_nombre" +
+        " AS Consultorio, a.dia_semana AS Día, a.hora_desde || ' a ' || " +
+        "a.hora_hasta AS Horario, p.apellido_nombre AS Profesional, " +
+        "COALESCE(e.nombre, '') AS Especialidad, a.vigencia_desde AS Desde, " +
+        "COALESCE(a.vigencia_hasta, 'sin vencimiento') AS Hasta FROM " +
+        "asignacion_de_consultorio a JOIN profesional p ON p.id_profesional" +
+        " = a.id_profesional JOIN consultorio_sala c ON c.id_consultorio = " +
+        "a.id_consultorio LEFT JOIN especialidad e ON e.id_especialidad = " +
+        "p.id_especialidad WHERE (a.vigencia_hasta IS NULL OR " +
+        "(a.vigencia_hasta >= @p0 AND a.vigencia_hasta >= " +
+        "a.vigencia_desde)) AND (@p1 IS NULL OR a.id_profesional = @p1) " +
+        "AND (@p2 IS NULL OR a.id_consultorio = @p2) ORDER BY " +
+        "c.numero_nombre, CASE a.dia_semana WHEN 'lunes' THEN 1 WHEN " +
+        "'martes' THEN 2 WHEN 'miércoles' THEN 3 WHEN 'jueves' THEN 4 WHEN " +
+        "'viernes' THEN 5 ELSE 6 END, a.hora_desde", Formato.Iso(Reloj.Hoy),
+        idProfesional, idConsultorio);
+    }
+
     /// <summary>Registra la asignación si el consultorio está libre.</summary>
     public static int Asignar(DatosAsignacion d)
     {

@@ -29,8 +29,11 @@ namespace SePrice.UI
       dtpVigenciaHasta.Checked = false;
       cboConsultorio.SelectedIndexChanged += (s, e) => Ocupacion();
       cboDotConsultorio.SelectedIndexChanged += (s, e) => Dot();
+      cboFiltroProfesional.SelectedIndexChanged += (s, e) => Filtrar();
+      cboFiltroConsultorio.SelectedIndexChanged += (s, e) => Filtrar();
       Pestanas p = new Pestanas { AlElegir = Elegir };
-      p.Agregar("Asignaciones");
+      p.Agregar("Consultorios asignados");
+      p.Agregar("Nueva asignación");
       p.Agregar("Dotación de insumos");
       Contenido.Controls.Add(p);
       p.Iniciar();
@@ -39,7 +42,8 @@ namespace SePrice.UI
     void Elegir(string nombre, Columna area)
     {
       OlvidarCampos();
-      if (nombre == "Asignaciones") area.Controls.Add(Ui.EnFila(
+      if (nombre == "Consultorios asignados") area.Controls.Add(Vigentes());
+      else if (nombre == "Nueva asignación") area.Controls.Add(Ui.EnFila(
         Formulario(), derecha));
       else area.Controls.Add(Dotacion());
     }
