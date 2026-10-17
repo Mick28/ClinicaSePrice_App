@@ -48,8 +48,7 @@ namespace SePrice.UI
       g.DefaultCellStyle.ForeColor = Tema.Texto;
       g.DefaultCellStyle.SelectionBackColor = Tema.PrimarioSuave;
       g.DefaultCellStyle.SelectionForeColor = Tema.Texto;
-      g.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(250, 251,
-        253);
+      g.AlternatingRowsDefaultCellStyle.BackColor = Tema.FilaAlterna;
       g.RowTemplate.Height = 32;
     }
 

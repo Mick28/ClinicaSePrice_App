@@ -94,6 +94,7 @@ namespace SePrice.UI
         {
             Espacio = 2,
             Cursor = Cursors.Hand,
+            BackColor = Tema.FilaAlterna,
             Padding = new Padding(16, 12, 16, 12)
         };
         t.Controls.Add(Linea(Titulo(i), 10.5f, FontStyle.Bold, Tema.Texto));
