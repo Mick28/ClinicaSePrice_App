@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using SePrice.Negocio;
 
 namespace SePrice.UI
 {
@@ -186,8 +187,10 @@ namespace SePrice.UI
     /// </summary>
     public static Label Circuito(string c)
     {
-      return Pildora(c == "B" ? "Estudios clínicos · Circuito B"
-        : "Consultorios externos · Circuito A", Tema.DeCircuito(c));
+      string texto = c == "B" ? "Estudios clínicos" : "Consultorios externos";
+      if (Configuracion.MostrarCodigos)
+        texto += c == "B" ? " · Circuito B" : " · Circuito A";
+      return Pildora(texto, Tema.DeCircuito(c));
     }
 
     /// <summary>Versión muy clara de un color (fondos de píldoras).</summary>
