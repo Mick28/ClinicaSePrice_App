@@ -22,14 +22,14 @@ namespace SePrice.UI
       Catalogo.Estudios(true));
     readonly DateTimePicker dtpDesde = Ui.Fecha("Desde", Reloj.Hoy.AddDays(4));
     readonly DateTimePicker dtpHasta = Ui.Fecha("Hasta", Reloj.Hoy.AddDays(15));
-    readonly TextBox txtDesde = Ui.Caja("HDesde"), txtHasta = Ui.Caja("HHasta");
+    readonly ComboBox cboDesde = Ui.Hora("HDesde"), cboHasta = Ui.Hora("HHasta");
     readonly List<CheckBox> dias = new List<CheckBox>();
     readonly Columna vista = new Columna();
 
     protected override void ConstruirNormal()
     {
-      txtDesde.Text = "08:00";
-      txtHasta.Text = "12:00";
+      cboDesde.SelectedItem = "08:00";
+      cboHasta.SelectedItem = "12:00";
       Tarjeta t = new Tarjeta();
       t.Controls.Add(Ui.EnFila(NuevoCampo("sala", "Sala o equipo", cboSala,
         true), NuevoCampo("tecnico", "Técnico/a", cboTecnico, true),
@@ -37,7 +37,7 @@ namespace SePrice.UI
         true)));
       t.Controls.Add(Ui.EnFila(NuevoCampo("periodo", "Desde", dtpDesde),
         new Campo("Hasta", dtpHasta, false), NuevoCampo("horario",
-        "Hora desde", txtDesde, true), new Campo("Hora hasta", txtHasta,
+        "Hora desde", cboDesde, true), new Campo("Hora hasta", cboHasta,
         true)));
       t.Controls.Add(Dias());
       t.Controls.Add(Acciones());
@@ -74,8 +74,10 @@ namespace SePrice.UI
         Sala = sala?.Texto.Split('·')[0].Trim(),
         IdTecnico = (cboTecnico.SelectedItem as Opcion)?.Id ?? 0,
         DuracionEstudio = e?.Duracion ?? 15, Desde = dtpDesde.Value,
-        Hasta = dtpHasta.Value, HoraDesde = txtDesde.Text.Trim(),
-        HoraHasta = txtHasta.Text.Trim() };
+        Hasta = dtpHasta.Value,
+        HoraDesde = (cboDesde.SelectedItem as string) ?? "",
+        HoraHasta = (cboHasta.SelectedItem as string) ?? ""
+      };
       r.Dias.AddRange(dias.Where(c => c.Checked).Select(c => c.Text));
       return r;
     }

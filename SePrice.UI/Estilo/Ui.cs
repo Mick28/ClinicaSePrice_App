@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
+using System.Collections.Generic;
 
 namespace SePrice.UI
 {
@@ -220,6 +221,20 @@ namespace SePrice.UI
       if (items != null) foreach (object o in items) c.Items.Add(o);
       if (inicial) c.SelectedIndex = 0;
       c.DropDown += (s, e) => Ensanchar(c);
+      return c;
+    }
+
+    /// <summary>
+    /// Desplegable de horas cada 15 minutos (07:00 a 21:00): se elige con
+    /// el mouse o con las flechas, sin escribir.
+    /// </summary>
+    public static ComboBox Hora(string nombre)
+    {
+      List<string> horas = new List<string>();
+      for (int m = 7 * 60; m <= 21 * 60; m += 15)
+        horas.Add((m / 60).ToString("00") + ":" + (m % 60).ToString("00"));
+      ComboBox c = Combo(nombre, horas);
+      c.MaxDropDownItems = 12;
       return c;
     }
 

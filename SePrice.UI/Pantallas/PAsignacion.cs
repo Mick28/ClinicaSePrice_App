@@ -16,7 +16,7 @@ namespace SePrice.UI
     readonly ComboBox cboConsultorio = Ui.Combo("Consultorio",
       DatosBase.ListaLugares("consultorio"));
     readonly ComboBox cboDia = Ui.Combo("Dia", Asignaciones.Dias);
-    readonly TextBox txtDesde = Ui.Caja("Desde"), txtHasta = Ui.Caja("Hasta");
+    readonly ComboBox cboDesde = Ui.Hora("Desde"), cboHasta = Ui.Hora("Hasta");
     readonly DateTimePicker dtpVigencia = Ui.Fecha("Vigencia", Reloj.Hoy);
     readonly Columna derecha = new Columna();
 
@@ -48,8 +48,8 @@ namespace SePrice.UI
       t.Controls.Add(NuevoCampo("consultorio", "Consultorio",
         cboConsultorio, true));
       t.Controls.Add(NuevoCampo("dia", "Día", cboDia, true));
-      t.Controls.Add(Ui.EnFila(NuevoCampo("franja", "Hora desde (hh:mm)",
-        txtDesde, true), NuevoCampo("hasta", "Hora hasta", txtHasta, true)));
+      t.Controls.Add(Ui.EnFila(NuevoCampo("franja", "Hora desde",
+        cboDesde, true), NuevoCampo("hasta", "Hora hasta", cboHasta, true)));
       t.Controls.Add(NuevoCampo("vigencia", "Vigencia desde", dtpVigencia));
       t.Controls.Add(Ui.Botones(Ui.Boton("Asignar", TipoBoton.Primario,
         (s, e) => Asignar()), BotonBlanquear()));
@@ -61,8 +61,9 @@ namespace SePrice.UI
       DatosAsignacion d = new DatosAsignacion {
         IdProfesional = (cboProfesional.SelectedItem as Opcion)?.Id ?? 0,
         IdConsultorio = (cboConsultorio.SelectedItem as Opcion)?.Id ?? 0,
-        DiaSemana = cboDia.Text, HoraDesde = txtDesde.Text.Trim(),
-        HoraHasta = txtHasta.Text.Trim(),
+        DiaSemana = cboDia.Text,
+        HoraDesde = (cboDesde.SelectedItem as string) ?? "",
+        HoraHasta = (cboHasta.SelectedItem as string) ?? "",
         VigenciaDesde = Formato.Iso(dtpVigencia.Value) };
       if (!Horas(d)) return;
       if (Guardar(() => Asignaciones.Asignar(d), "Asignación registrada. " +
@@ -75,7 +76,7 @@ namespace SePrice.UI
       bool ok = TimeSpan.TryParse(d.HoraDesde, out h) &&
         TimeSpan.TryParse(d.HoraHasta, out h) && d.HoraDesde.Length == 5 &&
         d.HoraHasta.Length == 5;
-      if (!ok) Dialogo.Error("Ingresá las horas como 09:00.");
+      if (!ok) Dialogo.Error("Elegí la hora desde y la hora hasta.");
       return ok;
     }
 
