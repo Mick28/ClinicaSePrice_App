@@ -18,10 +18,15 @@ namespace SePrice.UI
     readonly ComboBox cboDia = Ui.Combo("Dia", Asignaciones.Dias);
     readonly ComboBox cboDesde = Ui.Hora("Desde"), cboHasta = Ui.Hora("Hasta");
     readonly DateTimePicker dtpVigencia = Ui.Fecha("Vigencia", Reloj.Hoy);
+    readonly DateTimePicker dtpVigenciaHasta = Ui.Fecha("VigenciaHasta",
+      Reloj.Hoy);
     readonly Columna derecha = new Columna();
 
     protected override void ConstruirNormal()
     {
+      // Fecha opcional: sin tildar la casilla = sin fecha de fin.
+      dtpVigenciaHasta.ShowCheckBox = true;
+      dtpVigenciaHasta.Checked = false;
       cboConsultorio.SelectedIndexChanged += (s, e) => Ocupacion();
       cboDotConsultorio.SelectedIndexChanged += (s, e) => Dot();
       Pestanas p = new Pestanas { AlElegir = Elegir };
@@ -50,7 +55,9 @@ namespace SePrice.UI
       t.Controls.Add(NuevoCampo("dia", "Día", cboDia, true));
       t.Controls.Add(Ui.EnFila(NuevoCampo("franja", "Hora desde",
         cboDesde, true), NuevoCampo("hasta", "Hora hasta", cboHasta, true)));
-      t.Controls.Add(NuevoCampo("vigencia", "Vigencia desde", dtpVigencia));
+      t.Controls.Add(Ui.EnFila(NuevoCampo("vigencia", "Vigencia desde",
+        dtpVigencia), new Campo("Vigencia hasta (opcional)",
+        dtpVigenciaHasta, false)));
       t.Controls.Add(Ui.Botones(Ui.Boton("Asignar", TipoBoton.Primario,
         (s, e) => Asignar()), BotonBlanquear()));
       return t;
@@ -64,7 +71,9 @@ namespace SePrice.UI
         DiaSemana = cboDia.Text,
         HoraDesde = (cboDesde.SelectedItem as string) ?? "",
         HoraHasta = (cboHasta.SelectedItem as string) ?? "",
-        VigenciaDesde = Formato.Iso(dtpVigencia.Value) };
+        VigenciaDesde = Formato.Iso(dtpVigencia.Value),
+        VigenciaHasta = dtpVigenciaHasta.Checked
+          ? Formato.Iso(dtpVigenciaHasta.Value) : null };
       if (!Horas(d)) return;
       if (Guardar(() => Asignaciones.Asignar(d), "Asignación registrada. " +
         Afectados(d))) Ocupacion();

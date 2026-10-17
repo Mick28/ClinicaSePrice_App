@@ -116,6 +116,46 @@ namespace SePrice.Negocio
     }
 
     /// <summary>
+    /// Finaliza una asignación: le pone el último día de vigencia. No se
+    /// borra (RNF-05). Si la fecha es anterior a su inicio, queda anulada.
+    /// </summary>
+    public static void Finalizar(int idAsignacion, string fin)
+    {
+      Sesion.Exigir(Cu);
+      ReglaException.Exigir(string.CompareOrdinal(fin,
+        Formato.Iso(Reloj.Hoy)) >= 0, "El último día no puede ser " +
+        "anterior a hoy.", "fin");
+      string antes = Consulta.Texto("SELECT COALESCE(vigencia_hasta, " +
+        "'sin vencimiento') FROM asignacion_de_consultorio WHERE " +
+        "id_asignacion = @p0", idAsignacion);
+      ReglaException.Exigir(antes != null, "Esa asignación no existe.");
+      Consulta.Ejecutar("UPDATE asignacion_de_consultorio SET " +
+        "vigencia_hasta = @p0 WHERE id_asignacion = @p1", fin, idAsignacion);
+      Auditoria.Cambio("A", Modulo, "ASIGNACIÓN DE CONSULTORIO",
+        idAsignacion, "vigencia_hasta: " + antes, "vigencia_hasta: " + fin);
+    }
+
+    /// <summary>
+    /// Días de agenda ya publicados con esa asignación después de la fecha
+    /// de fin (hay que avisar: siguen publicados).
+    /// </summary>
+    public static List<string> AgendasPosteriores(int idAsignacion,
+      string fin)
+    {
+      return Consulta.Lista("SELECT g.dia || ' de ' || g.hora_desde || " +
+        "' a ' || g.hora_hasta || ' (' || (SELECT COUNT(*) FROM turno t " +
+        "WHERE t.id_agenda = g.id_agenda AND t.estado <> 'cancelado') || " +
+        "' turnos dados)' AS t FROM agenda g JOIN asignacion_de_consultorio" +
+        " a ON a.id_profesional = g.id_profesional AND a.id_consultorio = " +
+        "g.id_consultorio AND a.hora_desde = g.hora_desde WHERE " +
+        "a.id_asignacion = @p0 AND g.dia > @p1 AND strftime('%w', g.dia) " +
+        "= CASE a.dia_semana WHEN 'lunes' THEN '1' WHEN 'martes' THEN '2' " +
+        "WHEN 'miércoles' THEN '3' WHEN 'jueves' THEN '4' WHEN 'viernes' " +
+        "THEN '5' ELSE '6' END ORDER BY g.dia", f => f.Texto("t"),
+        idAsignacion, fin);
+    }
+
+    /// <summary>
     /// Turnos futuros del profesional en otro consultorio (reasignación,
     /// CU-A-16): hay que avisar a los pacientes el nuevo lugar.
     /// </summary>

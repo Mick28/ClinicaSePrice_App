@@ -13,8 +13,11 @@ namespace SePrice.UI
     readonly ComboBox cboInsumo = Ui.Combo("Insumo", Insumos.Lista());
     readonly NumericUpDown numCantidad = Ui.Numero("Cantidad", 1, 999, 10);
     DataGridView tblDotacion;
+    DataGridView tblAsignaciones;
+    readonly DateTimePicker dtpFin = Ui.Fecha("Fin", Reloj.Hoy);
 
-    // Grilla semanal de ocupación del consultorio elegido.
+    // Grilla semanal de ocupación del consultorio elegido, con la tabla de
+    // asignaciones vigentes y la opción de finalizar una.
     void Ocupacion()
     {
       Opcion c = cboConsultorio.SelectedItem as Opcion;
@@ -23,9 +26,31 @@ namespace SePrice.UI
       Tarjeta t = new Tarjeta();
       t.Controls.Add(Ui.Subtitulo("Ocupación semanal · " + c.Texto));
       t.Controls.Add(new GrillaSemanal(Asignaciones.Ocupacion(c.Id)));
-      t.Controls.Add(Ui.Tabla("Asignaciones", Asignaciones.DelConsultorio(
-        c.Id), 8));
+      tblAsignaciones = Ui.Tabla("Asignaciones",
+        Asignaciones.DelConsultorio(c.Id), 8);
+      t.Controls.Add(tblAsignaciones);
+      t.Controls.Add(Ui.EnFila(NuevoCampo("fin", "Último día de atención",
+        dtpFin), Ui.Botones(Ui.Boton("Finalizar asignación elegida",
+        TipoBoton.Secundario, (s, e) => Finalizar()))));
       derecha.Controls.Add(t);
+    }
+
+    // Pone fecha de fin a la asignación elegida en la tabla. Si ya hay
+    // agenda publicada después, lo avisa antes de confirmar.
+    void Finalizar()
+    {
+      int? id = Ui.Elegido(tblAsignaciones);
+      if (id == null) { Dialogo.Error("Elegí en la tabla la asignación " +
+        "a finalizar."); return; }
+      string fin = Formato.Iso(dtpFin.Value);
+      List<string> l = Asignaciones.AgendasPosteriores(id.Value, fin);
+      string aviso = l.Count == 0 ? "" : "\n\nYa hay agenda publicada " +
+        "después de esa fecha:\n" + string.Join("\n", l) + "\nEsos días " +
+        "siguen publicados: hay que anularlos o reprogramar sus turnos.";
+      if (!Dialogo.Confirmar("¿Finalizar la asignación? El último día de " +
+        "atención será el " + Formato.Corta(dtpFin.Value) + "." + aviso,
+        "Finalizar asignación", "Finalizar", true)) return;
+      if (Intentar(() => Asignaciones.Finalizar(id.Value, fin))) Ocupacion();
     }
 
     Control Dotacion()
