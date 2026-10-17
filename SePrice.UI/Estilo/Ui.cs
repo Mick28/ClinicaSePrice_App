@@ -4,6 +4,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using System.Drawing.Drawing2D;
 
 namespace SePrice.UI
 {
@@ -74,7 +75,61 @@ namespace SePrice.UI
       b.Width = TextRenderer.MeasureText(texto, b.Font).Width + 36;
       b.MaximumSize = Ui.Tope(b.Width);
       if (clic != null) b.Click += clic;
+      Redondear(b, 8);
       return b;
+    }
+
+    /// <summary>
+    /// Redondea un botón: lo dibuja entero (fondo, borde y texto) con
+    /// esquinas curvas y suavizadas.
+    /// </summary>
+    public static void Redondear(Button b, int radio)
+    {
+      bool encima = false;
+      b.MouseEnter += (s, e) => { encima = true; b.Invalidate(); };
+      b.MouseLeave += (s, e) => { encima = false; b.Invalidate(); };
+      b.Paint += (s, e) => Dibujar(b, radio, encima, e.Graphics);
+    }
+
+    // Pinta el botón completo sobre el dibujo de fábrica.
+    static void Dibujar(Button b, int radio, bool encima, Graphics g)
+    {
+      g.SmoothingMode = SmoothingMode.AntiAlias;
+      g.Clear(b.Parent != null ? b.Parent.BackColor : Tema.Superficie);
+      Rectangle r = new Rectangle(1, 1, b.Width - 3, b.Height - 3);
+      using (GraphicsPath f = Forma(r, radio))
+      using (SolidBrush fondo = new SolidBrush(Fondo(b, encima)))
+      using (Pen borde = new Pen(b.FlatAppearance.BorderColor, 1.5f))
+      {
+        g.FillPath(fondo, f);
+        g.DrawPath(borde, f);
+      }
+      TextRenderer.DrawText(g, b.Text, b.Font, b.ClientRectangle,
+        b.Enabled ? b.ForeColor : Tema.Texto2,
+        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
+        TextFormatFlags.EndEllipsis);
+    }
+
+    // Color de fondo, un poco distinto cuando el mouse está encima.
+    static Color Fondo(Button b, bool encima)
+    {
+      if (!encima) return b.BackColor;
+      if (b.BackColor == Tema.Primario) return Tema.PrimarioHover;
+      if (b.BackColor == Tema.Superficie) return Tema.PrimarioSuave;
+      return b.BackColor;
+    }
+
+    /// <summary>Rectángulo con las cuatro esquinas redondeadas.</summary>
+    public static GraphicsPath Forma(Rectangle r, int radio)
+    {
+      int d = radio * 2;
+      GraphicsPath g = new GraphicsPath();
+      g.AddArc(r.X, r.Y, d, d, 180, 90);
+      g.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+      g.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+      g.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+      g.CloseFigure();
+      return g;
     }
 
     // «Registrar ingreso» → «RegistrarIngreso» (prefijo btn, material S12).
