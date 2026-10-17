@@ -119,10 +119,16 @@ namespace SePrice.UI
     static Control Seccion(string nombre)
     {
       string texto = nombre == Navegacion.A ? "CONSULTORIOS" : nombre;
-      Fila f = Ui.EnFila(new Parrafo { Text = texto, ForeColor =
-        Tema.Texto2, Font = Tema.Fuente(8.5f, FontStyle.Bold),
-        Padding = new Padding(4, 14, 0, 0) });
-      if (nombre != Navegacion.Comun)
+      Color color = nombre == Navegacion.A ? Tema.CircuitoA
+        : nombre == Navegacion.B ? Tema.CircuitoB : Tema.Texto;
+      Fila f = Ui.EnFila(new Parrafo
+      {
+        Text = texto,
+        ForeColor = color,
+        Font = Tema.Fuente(8.5f, FontStyle.Bold),
+        Padding = new Padding(4, 14, 0, 0)
+      });
+      if (nombre != Navegacion.Comun && Configuracion.MostrarCodigos)
       {
         Label l = Ui.Circuito(nombre == Navegacion.A ? "A" : "B");
         l.Text = nombre == Navegacion.A ? "Circuito A" : "Circuito B";
