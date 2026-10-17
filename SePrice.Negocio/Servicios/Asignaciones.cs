@@ -46,6 +46,8 @@ namespace SePrice.Negocio
       Validar(d);
       string ocupa = Ocupante(d);
       ReglaException.Exigir(ocupa == null, ocupa, "franja");
+      string superpuesto = Superpuesto(d);
+      ReglaException.Exigir(superpuesto == null, superpuesto, "franja");
       int id = Consulta.Insertar("INSERT INTO asignacion_de_consultorio " +
         "(id_profesional, id_consultorio, dia_semana, hora_desde, " +
         "hora_hasta, vigencia_desde, vigencia_hasta) VALUES (@p0, @p1, " +
@@ -90,6 +92,27 @@ namespace SePrice.Negocio
         "@p5)", f => f.Texto("m"), d.IdConsultorio, d.DiaSemana, d.HoraDesde,
         d.HoraHasta, d.VigenciaDesde,
         string.IsNullOrEmpty(d.VigenciaHasta) ? null : d.VigenciaHasta);
+    }
+
+    /// <summary>
+    /// Mensaje si el profesional ya atiende en otro consultorio en esa
+    /// franja, o null si está libre: no puede estar en dos lugares a la vez.
+    /// </summary>
+    public static string Superpuesto(DatosAsignacion d)
+    {
+      return Consulta.Uno("SELECT p.apellido_nombre || ' ya está " +
+        "asignado/a al ' || c.numero_nombre || ' los ' || a.dia_semana || " +
+        "' de ' || a.hora_desde || ' a ' || a.hora_hasta || '. Un " +
+        "profesional no puede atender en dos consultorios a la vez.' AS m " +
+        "FROM asignacion_de_consultorio a JOIN profesional p ON " +
+        "p.id_profesional = a.id_profesional JOIN consultorio_sala c ON " +
+        "c.id_consultorio = a.id_consultorio WHERE a.id_profesional = @p0 " +
+        "AND a.dia_semana = @p1 AND a.hora_desde < @p3 AND a.hora_hasta > " +
+        "@p2 AND (a.vigencia_hasta IS NULL OR a.vigencia_hasta >= @p4) AND " +
+        "(@p5 IS NULL OR a.vigencia_desde <= @p5)", f => f.Texto("m"),
+        d.IdProfesional, d.DiaSemana, d.HoraDesde, d.HoraHasta,
+        d.VigenciaDesde, string.IsNullOrEmpty(d.VigenciaHasta) ? null :
+        d.VigenciaHasta);
     }
 
     /// <summary>
