@@ -14,6 +14,12 @@ namespace SePrice.Negocio
     public DateTime Inicio;
     public string Profesional, Lugar, Ubicacion;
 
+    /// <summary>
+    /// Ya reservada (o pasada): se muestra en el calendario, pero no se
+    /// puede elegir.
+    /// </summary>
+    public bool Ocupada;
+
     public override string ToString()
     {
       return Formato.Corta(Inicio) + " · " + Formato.Hora(Inicio);
@@ -32,15 +38,18 @@ namespace SePrice.Negocio
 
     // ---------- Consultar disponibilidad ----------
 
-    /// <summary>Franjas libres de una especialidad (Circuito A).</summary>
+    /// <summary>
+    /// Franjas libres de una especialidad (Circuito A). Con «todas», también
+    /// las ocupadas, marcadas (calendario semanal).
+    /// </summary>
     public static List<Franja> Disponibles(int idEspecialidad,
-      int? idProfesional, DateTime desde, int dias = 7)
+      int? idProfesional, DateTime desde, int dias = 7, bool todas = false)
     {
       Sesion.Exigir(Cu);
       List<Franja> l = new List<Franja>();
       foreach (Fila a in AgendasA(idEspecialidad, idProfesional, desde, dias))
         l.AddRange(Libres(a, Agendas.Duracion(a.Entero("id_profesional")),
-          null, 0, 24 * 60));
+          null, 0, 24 * 60, todas));
       return l.OrderBy(f => f.Inicio).ToList();
     }
 
@@ -64,7 +73,7 @@ namespace SePrice.Negocio
 
     /// <summary>Franjas libres de un estudio con turno (Circuito B).</summary>
     public static List<Franja> DisponiblesEstudio(int idEstudio,
-      DateTime desde, int dias = 7)
+      DateTime desde, int dias = 7, bool todas = false)
     {
       Sesion.Exigir(Cu);
       Estudio e = Catalogo.PorId(idEstudio);
@@ -74,7 +83,8 @@ namespace SePrice.Negocio
         "lab_con_ayuno")) : new[] { 0, 24 * 60 };
       List<Franja> l = new List<Franja>();
       foreach (Fila a in AgendasB(e, desde, dias))
-        l.AddRange(Libres(a, e.Duracion ?? 15, e.Id, rango[0], rango[1]));
+        l.AddRange(Libres(a, e.Duracion ?? 15, e.Id, rango[0], rango[1],
+          todas));
       return l.OrderBy(f => f.Inicio).ToList();
     }
 
@@ -91,7 +101,7 @@ namespace SePrice.Negocio
 
     // Recorre la agenda en pasos de la duración y descarta lo ocupado.
     static List<Franja> Libres(Fila a, int duracion, int? idEstudio,
-      int desdeMin, int hastaMin)
+      int desdeMin, int hastaMin, bool todas = false)
     {
       DateTime dia = Formato.Leer(a.Texto("dia"));
       List<int[]> ocupado = Ocupado(a.Entero("id_agenda"));
@@ -99,9 +109,15 @@ namespace SePrice.Negocio
       int fin = Math.Min(Formato.Minutos(a.Texto("hora_hasta")), hastaMin);
       for (int m = Formato.Minutos(a.Texto("hora_desde")); m + duracion <=
         fin; m += duracion)
-        if (m >= desdeMin && Libre(ocupado, m, duracion)
-          && dia.AddMinutes(m) > Reloj.Ahora)
-          l.Add(Nueva(a, dia.AddMinutes(m), duracion, idEstudio));
+      {
+        if (m < desdeMin) continue;
+        bool libre = Libre(ocupado, m, duracion) &&
+          dia.AddMinutes(m) > Reloj.Ahora;
+        if (!libre && !todas) continue;
+        Franja f = Nueva(a, dia.AddMinutes(m), duracion, idEstudio);
+        f.Ocupada = !libre;
+        l.Add(f);
+      }
       return l;
     }
 

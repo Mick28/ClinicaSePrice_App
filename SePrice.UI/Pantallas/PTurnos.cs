@@ -65,11 +65,11 @@ namespace SePrice.UI
         optPersonal, optTelefonica), true);
       t.Controls.Add(circuito == "A" ? Ui.EnFila(new Campo("Especialidad *",
         cboEspecialidad, true), new Campo("Profesional (opcional)",
-        cboProfesional, false), new Campo("Desde", dtpDesde, false),
+        cboProfesional, false), new Campo("Semana del", dtpDesde, false),
         modalidad) : Ui.EnFila(new Campo("Estudio *", cboEstudio, true),
-        new Campo("Desde", dtpDesde, false), modalidad));
+        new Campo("Semana del", dtpDesde, false), modalidad));
       t.Controls.Add(Ui.Botones(Ui.Boton("Consultar disponibilidad",
-        TipoBoton.Secundario, (s, e) => Buscar())));
+        TipoBoton.Primario, (s, e) => Buscar())));
       return t;
     }
 
