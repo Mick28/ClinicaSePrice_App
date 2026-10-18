@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -21,6 +22,8 @@ namespace SePrice.UI
     readonly DateTimePicker dtpHasta = Ui.Fecha("Hasta",
       Reloj.Hoy.AddDays(14));
     readonly Columna vista = new Columna();
+    readonly Columna publicada = new Columna();
+    DataGridView tblPublicada;
 
     protected override void ConstruirNormal()
     {
@@ -31,7 +34,46 @@ namespace SePrice.UI
       t.Controls.Add(Ui.Botones(Ui.Boton("Ver vista previa",
         TipoBoton.Secundario, (s, e) => Previa())));
       Contenido.Controls.Add(t);
+      Contenido.Controls.Add(publicada);
       Contenido.Controls.Add(vista);
+      cboProfesional.SelectedIndexChanged += (s, e) => Publicada();
+    }
+
+    // Agenda ya publicada del profesional elegido, con opción de anular un
+    // día cargado por error (CU-A-04).
+    void Publicada()
+    {
+      publicada.Controls.Clear();
+      vista.Controls.Clear();
+      if (Profesional == 0) return;
+      Tarjeta t = new Tarjeta();
+      t.Controls.Add(Ui.Subtitulo("Agenda ya publicada"));
+      DataTable d = Agendas.Publicada(Profesional);
+      if (d.Rows.Count == 0) t.Controls.Add(Ui.Nota("Todavía no tiene " +
+        "agenda publicada de hoy en adelante."));
+      else AgregarPublicada(t, d);
+      publicada.Controls.Add(t);
+    }
+
+    void AgregarPublicada(Tarjeta t, DataTable d)
+    {
+      tblPublicada = Ui.Tabla("Publicada", d, 8);
+      t.Controls.Add(tblPublicada);
+      t.Controls.Add(Ui.Botones(Ui.Boton("Anular día elegido",
+        TipoBoton.Secundario, (s, e) => Anular())));
+    }
+
+    // Anula el día elegido (sólo si no tiene turnos); se puede volver a
+    // publicar después de corregir la asignación.
+    void Anular()
+    {
+      int? id = Ui.Elegido(tblPublicada);
+      if (id == null) { Dialogo.Error("Elegí en la tabla el día a anular.");
+        return; }
+      if (!Dialogo.Confirmar("¿Anular ese día de agenda? Deja de ofrecerse " +
+        "para dar turnos. Si fue un error, después podés volver a " +
+        "publicarlo.", "Anular día", "Anular", true)) return;
+      if (Intentar(() => Agendas.Anular(id.Value))) Publicada();
     }
 
     int Profesional
@@ -63,7 +105,9 @@ namespace SePrice.UI
     {
       Tarjeta t = new Tarjeta();
       int total = dias.Sum(d => d.Turnos);
-      t.Controls.Add(Ui.Subtitulo("Se van a generar " + total + " turnos"));
+      t.Controls.Add(Ui.Subtitulo("Vista previa · todavía no publicada"));
+      t.Controls.Add(Ui.Nota("Si está bien, tocá «Publicar agenda» para " +
+        "habilitar estos " + total + " turnos."));
       t.Controls.Add(Ui.Tabla("Vista", Tablas.De(dias.Select(d => new {
         Día = Formato.Corta(d.Dia), Horario = d.Desde + " a " + d.Hasta,
         Consultorio = d.Lugar, Turnos = d.Turnos })), 12));
@@ -79,7 +123,7 @@ namespace SePrice.UI
         dtpHasta.Value), null))
       {
         Dialogo.Informar("Se publicaron " + n + " turnos.");
-        vista.Controls.Clear();
+        Publicada();
       }
     }
   }
