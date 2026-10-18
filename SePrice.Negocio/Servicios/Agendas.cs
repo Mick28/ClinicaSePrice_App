@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using SePrice.Datos;
 
 namespace SePrice.Negocio
@@ -114,6 +115,55 @@ namespace SePrice.Negocio
         "puede ser anterior a la fecha desde.", "periodo");
       ReglaException.Exigir((hasta - desde).TotalDays <= 62, "Publicá " +
         "períodos de hasta dos meses.", "periodo");
+    }
+
+    /// <summary>
+    /// Agenda ya publicada del profesional, de hoy en adelante: cuántos
+    /// turnos ofrece cada día y cuántos ya se dieron.
+    /// </summary>
+    public static DataTable Publicada(int idProfesional)
+    {
+      Sesion.ExigirLectura(Cu);
+      return Consulta.Tabla("SELECT g.id_agenda AS Id, g.dia AS Día, " +
+        "g.hora_desde || ' a ' || g.hora_hasta AS Horario, c.numero_nombre" +
+        " AS Consultorio, ((substr(g.hora_hasta, 1, 2) * 60 + " +
+        "substr(g.hora_hasta, 4, 2)) - (substr(g.hora_desde, 1, 2) * 60 + " +
+        "substr(g.hora_desde, 4, 2))) / @p2 AS Turnos, (SELECT COUNT(*) " +
+        "FROM turno t WHERE t.id_agenda = g.id_agenda AND t.estado <> " +
+        "'cancelado') AS Dados, CASE g.profesional_ausente WHEN 1 THEN " +
+        "'Profesional ausente' ELSE '' END AS Observación FROM agenda g " +
+        "JOIN consultorio_sala c ON c.id_consultorio = g.id_consultorio " +
+        "WHERE g.id_profesional = @p0 AND g.dia >= @p1 ORDER BY g.dia, " +
+        "g.hora_desde", idProfesional, Formato.Iso(Reloj.Hoy),
+        Duracion(idProfesional));
+    }
+
+    /// <summary>
+    /// Anula un día de agenda publicado por error, para corregirlo y volver
+    /// a publicarlo. Sólo si es de hoy en adelante y no tiene ningún turno
+    /// registrado; la anulación queda en la auditoría con el día anulado.
+    /// </summary>
+    public static void Anular(int idAgenda)
+    {
+      Sesion.Exigir(Cu);
+      Fila g = Consulta.Uno("SELECT * FROM agenda WHERE id_agenda = @p0",
+        f => f, idAgenda);
+      ReglaException.Exigir(g != null, "Ese día de agenda no existe.");
+      ReglaException.Exigir(string.CompareOrdinal(g.Texto("dia"),
+        Formato.Iso(Reloj.Hoy)) >= 0, "No se anulan días pasados.");
+      int dados = Consulta.Entero("SELECT COUNT(*) FROM turno WHERE " +
+        "id_agenda = @p0 AND estado <> 'cancelado'", idAgenda);
+      ReglaException.Exigir(dados == 0, "Ese día tiene " + dados +
+        " turno(s) dado(s): reprogramalos o cancelalos desde Turnos antes " +
+        "de anularlo.");
+      ReglaException.Exigir(Consulta.Entero("SELECT COUNT(*) FROM turno " +
+        "WHERE id_agenda = @p0", idAgenda) == 0, "Ese día tiene turnos " +
+        "cancelados en su historial: no se puede anular.");
+      Consulta.Ejecutar("DELETE FROM agenda WHERE id_agenda = @p0", idAgenda);
+      Auditoria.Registrar("A", Modulo, "baja", "AGENDA", idAgenda,
+        "agenda del " + g.Texto("dia") + " de " + g.Texto("hora_desde") +
+        " a " + g.Texto("hora_hasta") + " · profesional " +
+        g.Entero("id_profesional"), null);
     }
 
     /// <summary>

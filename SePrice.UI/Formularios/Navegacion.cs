@@ -25,7 +25,7 @@ namespace SePrice.UI
   /// </summary>
   static partial class Navegacion
   {
-    public const string Comun = "COMÚN", A = "CONSULTORIOS EXTERNOS",
+    public const string Comun = "GENERAL", A = "CONSULTORIOS EXTERNOS",
       B = "ESTUDIOS CLÍNICOS";
 
     static readonly Dictionary<Perfil, string[]> menus =

@@ -39,6 +39,31 @@ namespace SePrice.Negocio
         "ORDER BY a.id_asignacion", idConsultorio, Formato.Iso(Reloj.Hoy));
     }
 
+    /// <summary>
+    /// Asignaciones vigentes de todos los consultorios (sin las anuladas),
+    /// con filtro opcional por profesional y por consultorio.
+    /// </summary>
+    public static DataTable Vigentes(int? idProfesional, int? idConsultorio)
+    {
+      Sesion.ExigirLectura(Cu);
+      return Consulta.Tabla("SELECT a.id_asignacion AS Id, c.numero_nombre" +
+        " AS Consultorio, a.dia_semana AS Día, a.hora_desde || ' a ' || " +
+        "a.hora_hasta AS Horario, p.apellido_nombre AS Profesional, " +
+        "COALESCE(e.nombre, '') AS Especialidad, a.vigencia_desde AS Desde, " +
+        "COALESCE(a.vigencia_hasta, 'sin vencimiento') AS Hasta FROM " +
+        "asignacion_de_consultorio a JOIN profesional p ON p.id_profesional" +
+        " = a.id_profesional JOIN consultorio_sala c ON c.id_consultorio = " +
+        "a.id_consultorio LEFT JOIN especialidad e ON e.id_especialidad = " +
+        "p.id_especialidad WHERE (a.vigencia_hasta IS NULL OR " +
+        "(a.vigencia_hasta >= @p0 AND a.vigencia_hasta >= " +
+        "a.vigencia_desde)) AND (@p1 IS NULL OR a.id_profesional = @p1) " +
+        "AND (@p2 IS NULL OR a.id_consultorio = @p2) ORDER BY " +
+        "c.numero_nombre, CASE a.dia_semana WHEN 'lunes' THEN 1 WHEN " +
+        "'martes' THEN 2 WHEN 'miércoles' THEN 3 WHEN 'jueves' THEN 4 WHEN " +
+        "'viernes' THEN 5 ELSE 6 END, a.hora_desde", Formato.Iso(Reloj.Hoy),
+        idProfesional, idConsultorio);
+    }
+
     /// <summary>Registra la asignación si el consultorio está libre.</summary>
     public static int Asignar(DatosAsignacion d)
     {
@@ -46,6 +71,8 @@ namespace SePrice.Negocio
       Validar(d);
       string ocupa = Ocupante(d);
       ReglaException.Exigir(ocupa == null, ocupa, "franja");
+      string superpuesto = Superpuesto(d);
+      ReglaException.Exigir(superpuesto == null, superpuesto, "franja");
       int id = Consulta.Insertar("INSERT INTO asignacion_de_consultorio " +
         "(id_profesional, id_consultorio, dia_semana, hora_desde, " +
         "hora_hasta, vigencia_desde, vigencia_hasta) VALUES (@p0, @p1, " +
@@ -90,6 +117,67 @@ namespace SePrice.Negocio
         "@p5)", f => f.Texto("m"), d.IdConsultorio, d.DiaSemana, d.HoraDesde,
         d.HoraHasta, d.VigenciaDesde,
         string.IsNullOrEmpty(d.VigenciaHasta) ? null : d.VigenciaHasta);
+    }
+
+    /// <summary>
+    /// Mensaje si el profesional ya atiende en otro consultorio en esa
+    /// franja, o null si está libre: no puede estar en dos lugares a la vez.
+    /// </summary>
+    public static string Superpuesto(DatosAsignacion d)
+    {
+      return Consulta.Uno("SELECT p.apellido_nombre || ' ya está " +
+        "asignado/a al ' || c.numero_nombre || ' los ' || a.dia_semana || " +
+        "' de ' || a.hora_desde || ' a ' || a.hora_hasta || '. Un " +
+        "profesional no puede atender en dos consultorios a la vez.' AS m " +
+        "FROM asignacion_de_consultorio a JOIN profesional p ON " +
+        "p.id_profesional = a.id_profesional JOIN consultorio_sala c ON " +
+        "c.id_consultorio = a.id_consultorio WHERE a.id_profesional = @p0 " +
+        "AND a.dia_semana = @p1 AND a.hora_desde < @p3 AND a.hora_hasta > " +
+        "@p2 AND (a.vigencia_hasta IS NULL OR a.vigencia_hasta >= @p4) AND " +
+        "(@p5 IS NULL OR a.vigencia_desde <= @p5)", f => f.Texto("m"),
+        d.IdProfesional, d.DiaSemana, d.HoraDesde, d.HoraHasta,
+        d.VigenciaDesde, string.IsNullOrEmpty(d.VigenciaHasta) ? null :
+        d.VigenciaHasta);
+    }
+
+    /// <summary>
+    /// Finaliza una asignación: le pone el último día de vigencia. No se
+    /// borra (RNF-05). Si la fecha es anterior a su inicio, queda anulada.
+    /// </summary>
+    public static void Finalizar(int idAsignacion, string fin)
+    {
+      Sesion.Exigir(Cu);
+      ReglaException.Exigir(string.CompareOrdinal(fin,
+        Formato.Iso(Reloj.Hoy)) >= 0, "El último día no puede ser " +
+        "anterior a hoy.", "fin");
+      string antes = Consulta.Texto("SELECT COALESCE(vigencia_hasta, " +
+        "'sin vencimiento') FROM asignacion_de_consultorio WHERE " +
+        "id_asignacion = @p0", idAsignacion);
+      ReglaException.Exigir(antes != null, "Esa asignación no existe.");
+      Consulta.Ejecutar("UPDATE asignacion_de_consultorio SET " +
+        "vigencia_hasta = @p0 WHERE id_asignacion = @p1", fin, idAsignacion);
+      Auditoria.Cambio("A", Modulo, "ASIGNACIÓN DE CONSULTORIO",
+        idAsignacion, "vigencia_hasta: " + antes, "vigencia_hasta: " + fin);
+    }
+
+    /// <summary>
+    /// Días de agenda ya publicados con esa asignación después de la fecha
+    /// de fin (hay que avisar: siguen publicados).
+    /// </summary>
+    public static List<string> AgendasPosteriores(int idAsignacion,
+      string fin)
+    {
+      return Consulta.Lista("SELECT g.dia || ' de ' || g.hora_desde || " +
+        "' a ' || g.hora_hasta || ' (' || (SELECT COUNT(*) FROM turno t " +
+        "WHERE t.id_agenda = g.id_agenda AND t.estado <> 'cancelado') || " +
+        "' turnos dados)' AS t FROM agenda g JOIN asignacion_de_consultorio" +
+        " a ON a.id_profesional = g.id_profesional AND a.id_consultorio = " +
+        "g.id_consultorio AND a.hora_desde = g.hora_desde WHERE " +
+        "a.id_asignacion = @p0 AND g.dia > @p1 AND strftime('%w', g.dia) " +
+        "= CASE a.dia_semana WHEN 'lunes' THEN '1' WHEN 'martes' THEN '2' " +
+        "WHEN 'miércoles' THEN '3' WHEN 'jueves' THEN '4' WHEN 'viernes' " +
+        "THEN '5' ELSE '6' END ORDER BY g.dia", f => f.Texto("t"),
+        idAsignacion, fin);
     }
 
     /// <summary>

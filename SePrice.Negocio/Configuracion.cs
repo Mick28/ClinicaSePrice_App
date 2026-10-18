@@ -25,6 +25,15 @@ namespace SePrice.Negocio
       get { return Valor("ModoDemo", "si").StartsWith("s"); }
     }
 
+    /// <summary>
+    /// Muestra los códigos de caso de uso (CU-G-xx) y de circuito en las
+    /// pantallas. Si no está en el archivo, no se muestran.
+    /// </summary>
+    public static bool MostrarCodigos
+    {
+        get { return Valor("MostrarCodigos", "no").StartsWith("s"); }
+    }
+
     /// <summary>Carga el archivo de configuración, si existe.</summary>
     public static void Cargar(string carpeta)
     {

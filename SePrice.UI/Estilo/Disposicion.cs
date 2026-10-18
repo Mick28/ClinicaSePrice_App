@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace SePrice.UI
@@ -113,6 +114,9 @@ namespace SePrice.UI
   {
     public Color ColorBorde = Tema.Borde;
 
+    /// <summary>Radio de las esquinas, en píxeles.</summary>
+    public int Radio = 10;
+
     public Tarjeta()
     {
       BackColor = Tema.Superficie;
@@ -120,11 +124,40 @@ namespace SePrice.UI
       ResizeRedraw = true;
     }
 
+    // Recorta el panel con la forma redondeada (las esquinas no se pintan).
+    protected override void OnResize(EventArgs e)
+    {
+      base.OnResize(e);
+      if (Width <= Radio * 2 || Height <= Radio * 2) return;
+      Region anterior = Region;
+      using (GraphicsPath f = Forma(new Rectangle(0, 0, Width, Height)))
+        Region = new Region(f);
+      if (anterior != null) anterior.Dispose();
+    }
+
+    // Dibuja el borde con la misma forma, suavizado.
     protected override void OnPaint(PaintEventArgs e)
     {
       base.OnPaint(e);
+      if (Width <= Radio * 2 || Height <= Radio * 2) return;
+      e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
       using (Pen p = new Pen(ColorBorde))
-        e.Graphics.DrawRectangle(p, 0, 0, Width - 1, Height - 1);
+      using (GraphicsPath f = Forma(new Rectangle(0, 0, Width - 1,
+        Height - 1)))
+        e.Graphics.DrawPath(p, f);
+    }
+
+    // Rectángulo con las cuatro esquinas redondeadas.
+    GraphicsPath Forma(Rectangle r)
+    {
+      int d = Radio * 2;
+      GraphicsPath g = new GraphicsPath();
+      g.AddArc(r.X, r.Y, d, d, 180, 90);
+      g.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+      g.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+      g.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+      g.CloseFigure();
+      return g;
     }
   }
 }

@@ -22,7 +22,7 @@ namespace SePrice.UI
       resumen.Controls.Clear();
       if (elegida == null)
       {
-        resumen.Controls.Add(Ui.Nota("Elegí una franja libre del " +
+        resumen.Controls.Add(Ui.Nota("Elegí un horario disponible del " +
           "calendario."));
         return;
       }

@@ -24,6 +24,8 @@ namespace SePrice.UI
     public static readonly Color CircuitoA = Hex("#1D6FB8");
     public static readonly Color CircuitoB = Hex("#6A4C93");
     public static readonly Color Auditoria = Hex("#E8EEF3");
+    public static readonly Color FilaAlterna = Color.FromArgb(250, 251, 253);
+
 
     // Segoe UI viene con Windows; la especificación sugiere Inter, que no
     // siempre está instalada (alternativas: Roboto, Arial).
