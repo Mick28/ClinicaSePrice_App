@@ -32,7 +32,7 @@ namespace SePrice.UI
         cboProfesional, true), NuevoCampo("periodo", "Desde", dtpDesde,
         true), new Campo("Hasta", dtpHasta, true)));
       t.Controls.Add(Ui.Botones(Ui.Boton("Ver vista previa",
-        TipoBoton.Secundario, (s, e) => Previa())));
+        TipoBoton.Primario, (s, e) => Previa())));
       Contenido.Controls.Add(t);
       Contenido.Controls.Add(publicada);
       Contenido.Controls.Add(vista);
