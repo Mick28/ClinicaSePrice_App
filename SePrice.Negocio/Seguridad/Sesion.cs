@@ -89,12 +89,20 @@ namespace SePrice.Negocio
     /// </summary>
     public static void Cerrar()
     {
-      if (Actual == null) return;
-      Consulta.Ejecutar("UPDATE registro_de_sesion SET cierre = @p0, " +
-        "tipo_cierre = 'manual' WHERE id_sesion = @p1",
-        Formato.IsoHora(Reloj.Ahora), idSesion);
-      Actual = null;
-      Conexion.Cerrar();
+      try
+      {
+        if (Actual != null)
+        {
+          Consulta.Ejecutar("UPDATE registro_de_sesion SET cierre = @p0, " +
+            "tipo_cierre = 'manual' WHERE id_sesion = @p1",
+            Formato.IsoHora(Reloj.Ahora), idSesion);
+        }
+      }
+      finally
+      {
+        Actual = null;
+        Conexion.Cerrar();
+      }
     }
 
     /// <summary>

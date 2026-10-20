@@ -33,10 +33,11 @@ namespace SePrice.Datos
     /// <summary>Cierra la conexión (cierre de sesión).</summary>
     public static void Cerrar()
     {
-      if (actual == null) return;
-      actual.Close();
-      actual.Dispose();
+      DbConnection conexion = actual;
       actual = null;
+      if (conexion == null) return;
+      try { conexion.Close(); }
+      finally { conexion.Dispose(); }
     }
 
     /// <summary>Conexión en uso. Falla si la sesión no la abrió.</summary>
