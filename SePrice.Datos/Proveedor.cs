@@ -16,7 +16,10 @@ namespace SePrice.Datos
       // desarrollo para verificar el código fuera de Windows.
       return new Mono.Data.Sqlite.SqliteConnection(cadena);
 #else
-      return new Microsoft.Data.Sqlite.SqliteConnection(cadena);
+      // Sin pool: la sesión usa una única conexión y, al cerrarla, el
+      // archivo de la base debe quedar libre (si no, sigue bloqueado).
+      return new Microsoft.Data.Sqlite.SqliteConnection(cadena +
+        ";Pooling=False");
 #endif
     }
   }
